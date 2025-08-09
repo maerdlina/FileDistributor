@@ -1,0 +1,4 @@
+server:
+  port: 9999
+
+# jdbc:h2:tcp://localhost:9092/default
