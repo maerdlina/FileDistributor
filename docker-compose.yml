@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  h2-db:
+    image: oscarfonts/h2
+    environment:
+      - H2_OPTIONS=-tcp -tcpAllowOthers -tcpPort 9092 -ifNotExists
+      - H2_PASSWORD=pass
+      - H2_USER=name
+      - H2_DB=h2
+    ports:
+      - "9092:9092"
