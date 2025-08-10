@@ -4,8 +4,28 @@ services:
     image: oscarfonts/h2
     environment:
       - H2_OPTIONS=-tcp -tcpAllowOthers -tcpPort 9092 -ifNotExists
-      - H2_PASSWORD=pass
-      - H2_USER=name
+      - H2_USER=maerdlina
+      - H2_PASSWORD=pass_h2
       - H2_DB=h2
     ports:
       - "9092:9092"
+
+  postgres-db-1:
+    image: postgres
+    environment:
+      - POSTGRES_USER=maerdlina
+      - POSTGRES_PASSWORD=pass_postgres_1
+      - POSTGRES_DB=postgres
+    ports:
+      - "5000:5432"
+
+
+  postgres-db-2:
+    image: postgres
+    environment:
+      - POSTGRES_USER=maerdlina
+      - POSTGRES_PASSWORD=pass_postgres_2
+      - POSTGRES_DB=postgres
+    ports:
+      - "5001:5432"
+
