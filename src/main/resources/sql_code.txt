@@ -20,4 +20,4 @@ CREATE TABLE metadata (
 
 INSERT INTO file_mask (pattern, target_db, isActive, endDate, fileFormat)
 VALUES
-    ('SVD_{report,info}_????????.csv', 'Postgres_SVD', true, '2025-12-31', 'CSV');
+    ('SVD_{report,info}_????????.csv', 'PostgresSVD', true, '2025-12-31', 'CSV');
