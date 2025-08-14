@@ -17,6 +17,7 @@ public class WatcherService {
         this.fileMaskRepository = fileMaskRepository;
     }
 
+    // Correct file or not - Get
     public File[] getFileList(String dirPath) {
         File dir = new File(dirPath);
         File[] fileList = dir.listFiles((dir1, name) ->
@@ -36,6 +37,12 @@ public class WatcherService {
         }
 
         return fileList;
+    }
+
+    // Sent Metadata to H2
+    public boolean sendMetadataToDB(String path){
+        List<File> correctFiles = List.of(getFileList(path));
+        return fileMaskRepository.sendMetadataToDB(correctFiles);
     }
 
     private boolean hasValidStructure(String fileName) {

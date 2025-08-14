@@ -1,9 +1,8 @@
 package ru.test.searchfilesinfolder.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.test.searchfilesinfolder.service.WatcherService;
 
 import java.io.File;
@@ -13,15 +12,21 @@ import java.io.File;
 public class WatcherController {
 
     private final WatcherService watcherService;
-    private final String scanPath = "C:/Users/maerd/Documents/Search/"; // Лучше вынести в @Value
+//    private final String scanPath = "C:/Users/maerd/Documents/Search/";
+    @Value("${search.scan-path}") // Инъекция значения из конфига
+    private String scanPath;
 
     public WatcherController(WatcherService watcherService) {
         this.watcherService = watcherService;
     }
 
-    @GetMapping("/csv")
+    @GetMapping("/checkCsv&Mask")
     public ResponseEntity<File[]> listCsvFiles() {
         return ResponseEntity.ok(watcherService.getFileList(scanPath));
     }
 
+    @PostMapping("/sendMetadataToH2")
+    public ResponseEntity<Boolean> sendMetadataToDB() {
+        return ResponseEntity.ok(watcherService.sendMetadataToDB(scanPath));
+    }
 }
