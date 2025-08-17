@@ -1,91 +1,99 @@
 package ru.test.searchfilesinfolder.service;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
+import ru.test.searchfilesinfolder.model.FileCorrect;
+import ru.test.searchfilesinfolder.model.FileMask;
 import ru.test.searchfilesinfolder.repository.FileMaskRepository;
 
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.*;
 
 @Service
 public class WatcherService {
     private final FileMaskRepository fileMaskRepository;
+    private final FileMaskService fileMaskService;
 
-    public WatcherService(FileMaskRepository fileMaskRepository) {
+    public WatcherService(FileMaskRepository fileMaskRepository, FileMaskService fileMaskService) {
         this.fileMaskRepository = fileMaskRepository;
+        this.fileMaskService = fileMaskService;
     }
 
-    // Correct file or not - Get
-    public File[] getFileList(String dirPath) {
+    // Send FilesCorrect to Repository
+    public boolean sendMetadataToH2(String dirPath){
+        List<FileCorrect> files = createFileCorrectList(dirPath);
+        return fileMaskRepository.upsertMetadata(files);
+    }
+
+    // Active FileMask in List<FileMask>
+    public List<FileMask> getActiveFileMask(){
+        // Список для активных масок
+        List<FileMask> activeFileMask = new ArrayList<>();
+
+        // Активные маски в виде Map<Integer, Object>
+        List<Map<String, Object>> fileMasks = fileMaskRepository.getFileMaskData();
+
+        // Сохранение масок в списке List<FileMask>
+        for(Map<String, Object> fileMask: fileMasks){
+            FileMask mask = new FileMask();
+            mask.setMask_id((Integer) fileMask.get("mask_id"));
+            mask.setPattern((String) fileMask.get("pattern"));
+            mask.setTargetDb((String) fileMask.get("target_db"));
+            mask.setIsActive((Boolean) fileMask.get("isactive"));
+            mask.setEndDate((Date) fileMask.get("enddate"));
+            mask.setFileFormat((String) fileMask.get("fileformat"));
+            activeFileMask.add(mask);
+        }
+
+        return activeFileMask;
+    }
+
+    // Correct files in List<FileCorrect>
+    public List<FileCorrect> createFileCorrectList(String dirPath) {
         File dir = new File(dirPath);
-        File[] fileList = dir.listFiles((dir1, name) ->
-                name.toLowerCase().endsWith(".csv") && hasValidStructure(name)
-        );
 
-        if(fileList == null || fileList.length == 0)
-            return new File[0];
+        Collection<File> files = FileUtils.listFiles(dir, new String[]{"csv"}, false);
 
-        List<String> patterns = fileMaskRepository.getActiveCsvPatterns();
-        if (patterns.isEmpty()) return fileList;
-
-        List<File> matchedFiles = new ArrayList<>();
-        for(File file : fileList) {
-            if(matchesAnyPattern(file.getName(), patterns))
-                matchedFiles.add(file);
+        if (files == null) {
+            return new ArrayList<>();
         }
 
-        return fileList;
-    }
+        List<FileMask> activeMasks = fileMaskService.getActiveFileMask();
+        List<FileCorrect> correctFiles = new ArrayList<>();
 
-    // Sent Metadata to H2
-    public boolean sendMetadataToDB(String path){
-        List<File> correctFiles = List.of(getFileList(path));
-        return fileMaskRepository.sendMetadataToDB(correctFiles);
-    }
-
-    private boolean hasValidStructure(String fileName) {
-        // Не учитываем регистр для расширения
-        if (!fileName.toLowerCase().endsWith(".csv")) {
-            return false;
-        }
-
-        // Удаляем расширение
-        String baseName = fileName.substring(0, fileName.length() - 4);
-        String[] parts = baseName.split("_");
-
-        if (parts.length != 3) {
-            return false;
-        }
-
-        // Проверяем префикс
-        String prefix = parts[0].toUpperCase();
-        if (!"SVD".equals(prefix) && !"CDD".equals(prefix)) {
-            return false;
-        }
-
-        // Проверяем тип
-        String type = parts[2].toLowerCase();
-        if (!"report".equals(type) && !"info".equals(type)) {
-            return false;
-        }
-
-        return parts[1].matches("\\d{8}");
-    }
-
-    private boolean matchesAnyPattern(String fileName, List<String> patterns) {
-        for(String pattern : patterns) {
-            try{
-                PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:"
-                + pattern);
-
-                if(matcher.matches(java.nio.file.Paths.get(fileName)))
-                    return true;
-            } catch(Exception e){
-                System.err.println("Ошибка в шаблоне '" + pattern + "': " + e.getMessage());
+        for (File file : files) {
+            for (FileMask mask : activeMasks) {
+                if (matchesPattern(file.getName(), mask.getPattern())) {
+                    FileCorrect correctFile = new FileCorrect();
+                    correctFile.setFileName(file.getName());
+                    correctFile.setFileSize((int) FileUtils.sizeOf(file));
+                    correctFile.setFileLastModified(new Timestamp(file.lastModified()));
+                    correctFile.setProcessStartTime(Timestamp.from(Instant.now()));
+                    correctFile.setProcessEndTime(Timestamp.from(Instant.now()));
+                    correctFile.setStatus("processing");
+                    correctFile.setMask_id(mask.getMask_id());
+                    correctFiles.add(correctFile);
+                    break; // Прерываем цикл после первого совпадения
+                }
             }
         }
-        return false;
+
+        return correctFiles;
     }
+
+    private boolean matchesPattern(String fileName, String pattern) {
+        try {
+            // Создаем PathMatcher для glob-шаблона
+            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+            return matcher.matches(java.nio.file.Paths.get(fileName));
+        } catch (Exception e) {
+            System.err.println("Ошибка в шаблоне '" + pattern + "': " + e.getMessage());
+            return false;
+        }
+    }
+
 }

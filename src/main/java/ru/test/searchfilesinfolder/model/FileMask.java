@@ -10,7 +10,7 @@ import java.util.Date;
 public class FileMask {
     private String pattern;
     private String targetDb;
-    private boolean isActive;
+    private Boolean isActive;
     private Date endDate;
     private String fileFormat;
     private int mask_id;

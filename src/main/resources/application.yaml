@@ -11,17 +11,3 @@ spring:
 
 search:
   scan-path: "C:/Users/maerd/Documents/Search/"
-
-
-
-
-  #    postgres1:
-#      username: maerdlina
-#      password: pass_postgres_1
-#      driver-class-name: org.postgresql.Driver
-#      url: jdbc:postgresql://localhost:5000/postgres
-#    postgres2:
-#      username: maerdlina
-#      password: pass_postgres_2
-#      driver-class-name: org.postgresql.Driver
-#      url: jdbc:postgresql://localhost:5001/postgres
