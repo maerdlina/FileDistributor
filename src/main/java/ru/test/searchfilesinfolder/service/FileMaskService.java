@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import ru.test.searchfilesinfolder.model.FileMask;
 import ru.test.searchfilesinfolder.repository.FileMaskRepository;
 
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -37,5 +39,15 @@ public class FileMaskService {
         }
 
         return activeFileMask;
+    }
+
+    public boolean matchesPattern(String fileName, String pattern) {
+        try {
+            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+            return matcher.matches(java.nio.file.Paths.get(fileName));
+        } catch (Exception e) {
+            System.err.println("Ошибка в шаблоне '" + pattern + "': " + e.getMessage());
+            return false;
+        }
     }
 }

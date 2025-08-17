@@ -4,11 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
 @Setter
 @Getter
-public class FileCorrect {
+public class FileMetadata {
 //    private Integer metadataId;
     private String fileName;
     private Integer fileSize;
