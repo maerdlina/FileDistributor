@@ -1,0 +1,23 @@
+CREATE TABLE file_mask (
+    mask_id INT AUTO_INCREMENT PRIMARY KEY,
+    pattern VARCHAR(255) NOT NULL,
+    target_db VARCHAR(100) NOT NULL,
+    isActive BOOLEAN NOT NULL DEFAULT true,
+    endDate DATE,
+    fileFormat VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE metadata (
+    metadata_id INT AUTO_INCREMENT PRIMARY KEY,
+    file_name VARCHAR(255) NOT NULL,
+    file_size BIGINT NOT NULL CHECK (file_size >= 0),
+    process_start_time TIMESTAMP NOT NULL,
+    process_end_time TIMESTAMP,
+    status VARCHAR(50) NOT NULL,
+    error_text TEXT,
+    mask_id INTEGER NOT NULL REFERENCES FILE_MASK(mask_id) ON DELETE RESTRICT
+);
+
+INSERT INTO file_mask (pattern, target_db, isActive, endDate, fileFormat)
+VALUES
+    ('SVD_{report,info}_????????', 'PostgresSVD', true, '2025-12-31', 'TXT');

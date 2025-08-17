@@ -1,0 +1,13 @@
+server:
+  port: 9999
+
+spring:
+  datasource:
+    username: maerdlina
+    password: pass_h2
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:tcp://localhost:9092/Metadata
+
+
+search:
+  scan-path: "C:/Users/maerd/Documents/Search/"
