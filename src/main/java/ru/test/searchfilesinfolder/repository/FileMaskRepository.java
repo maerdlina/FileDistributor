@@ -19,12 +19,10 @@ public class FileMaskRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Map<String, Object>> getFileMaskData(){
+    public List<Map<String, Object>> getFileMaskData() {
         String sql = "SELECT * FROM FILE_MASK "
-                + "WHERE FILEFORMAT = 'CSV' "
-                + "AND ISACTIVE = true "
+                + "WHERE ISACTIVE = true "
                 + "AND (ENDDATE IS NULL OR ENDDATE >= CURRENT_DATE)";
-
         return jdbcTemplate.queryForList(sql);
     }
 }
